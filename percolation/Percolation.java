@@ -29,35 +29,36 @@ public class Percolation {
         for (int i = 0; i < n * n + 2; i++) {
             id[i] = i;
         }
-        // connect top and bottom
-        for (int i = 1; i <= size; i++) {
-            union(0, i, 0, 0, true, false);
-            union(size, i, 0, 0, false, true);
-        }
     }
 
     // opens the site (row, col) if it is not open already
     public void open(int row, int col) {
         if (!isOpen(row, col)) {
             grid[row - 1][col - 1] = 1;
-            if (row - 1 > 0) {
+            if (row - 1 != 0) {
                 if (isOpen(row - 1, col)) {
-                    union(row, col, row - 1, col, false, false);
+                    union(row, col, row - 1, col);
                 }
+            }
+            else {
+                unionBottom(row, col);
             }
             if (row != size) {
                 if (isOpen(row + 1, col)) {
-                    union(row, col, row + 1, col, false, false);
+                    union(row, col, row + 1, col);
                 }
             }
-            if (col - 1 > 0) {
+            else {
+                unionTop(row, col);
+            }
+            if (col - 1 != 0) {
                 if (isOpen(row, col - 1)) {
-                    union(row, col, row, col - 1, false, false);
+                    union(row, col, row, col - 1);
                 }
             }
             if (col != size) {
                 if (isOpen(row, col + 1)) {
-                    union(row, col, row, col + 1, false, false);
+                    union(row, col, row, col + 1);
                 }
             }
         }
@@ -95,7 +96,7 @@ public class Percolation {
 
     // does the system percolate? normalized
     public boolean percolates() {
-        return connected(id[0], id[size + 1]);
+        return connected(id[0], id[size * size + 1]);
     }
 
     // normalized
@@ -103,25 +104,27 @@ public class Percolation {
         return id[p] == id[q];
     }
 
-    public void union(int row, int col, int rol2, int col2, boolean top, boolean bottom) {
-        if (top) {
-            int pid = id[col];
-            int qid = id[0];
-            for (int i = 0; i < id.length; i++)
-                if (id[i] == pid) id[i] = qid;
-        }
-        if (bottom) {
-            int pid = id[col];
-            int qid = id[id.length - 1];
-            for (int i = 0; i < id.length; i++)
-                if (id[i] == pid) id[i] = qid;
-        }
+    public void union(int row, int col, int row2, int col2) {
+        int pid = id[(row - 1) * size + col];
+        int qid = id[(row2 - 1) * size + col2];
+        for (int i = 0; i < id.length; i++)
+            if (id[i] == pid) id[i] = qid;
+    }
+
+    public void unionBottom(int row, int col) {
+        int pid = id[(row - 1) * size + col];
+        int qid = id[0];
+        for (int i = 0; i < id.length; i++)
+            if (id[i] == pid) id[i] = qid;
+    }
+
+    public void unionTop(int row, int col) {
+        int pid = id[(row - 1) * size + col];
+        int qid = id[size * size + 1];
+        for (int i = 0; i < id.length; i++)
+            if (id[i] == pid) id[i] = qid;
     }
 
     public static void main(String[] args) {
-        Percolation perc = new Percolation(2);
-        for (int i = 0; i < perc.size * perc.size + 2; i++) {
-            System.out.println(perc.id[i]);
-        }
     }
 }
