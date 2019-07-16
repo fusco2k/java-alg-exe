@@ -1,3 +1,5 @@
+import edu.princeton.cs.algs4.WeightedQuickUnionUF;
+
 /* *****************************************************************************
  *  Name:
  *  Date:
@@ -5,24 +7,27 @@
  **************************************************************************** */
 public class Percolation {
 
-    private int[][] grid;
-    private int[] id;
-    private int size;
+    private boolean[][] grid;
+    private final int[] id;
+    private final int size;
+    private final WeightedQuickUnionUF wquf;
+    private int count = 0;
 
     // creates n-by-n grid, with all sites initially blocked
     public Percolation(int n) {
-        // initialize the grid array
-        grid = new int[n][n];
-        // initialize the id array
-        id = new int[n * n + 2];
-        size = n;
-        // fill the grid with closed spots (0)
         if (n <= 0) {
             throw new IllegalArgumentException("n <= 0");
         }
+        // initialize the grid array
+        grid = new boolean[n][n];
+        // initialize the id array
+        id = new int[n * n + 2];
+        wquf = new WeightedQuickUnionUF(n * n + 2);
+        size = n;
+        // fill the grid with closed spots (0)
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                grid[i][j] = 0;
+                grid[i][j] = false;
             }
         }
         // fill the id with respective number
@@ -33,8 +38,12 @@ public class Percolation {
 
     // opens the site (row, col) if it is not open already
     public void open(int row, int col) {
+        if (row > size || col > size || row <= 0 || col <= 0) {
+            throw new IllegalArgumentException("n > size");
+        }
         if (!isOpen(row, col)) {
-            grid[row - 1][col - 1] = 1;
+            grid[row - 1][col - 1] = true;
+            count++;
             if (row - 1 != 0) {
                 if (isOpen(row - 1, col)) {
                     union(row, col, row - 1, col);
@@ -66,65 +75,57 @@ public class Percolation {
 
     // is the site (row, col) open? normalized
     public boolean isOpen(int row, int col) {
-        return grid[row - 1][col - 1] == 1;
+        if (row > size || col > size || row <= 0 || col <= 0) {
+            throw new IllegalArgumentException("n > size");
+        }
+        return grid[row - 1][col - 1];
     }
 
     // is the site (row, col) full?
     public boolean isFull(int row, int col) {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (grid[i][j] != 1) {
-                    return false;
-                }
-            }
+        if (row > size || col > size || row <= 0 || col <= 0) {
+            throw new IllegalArgumentException("n > size");
         }
-        return true;
+        int pid = id[(row - 1) * size + col];
+        int f = wquf.find(pid);
+        return wquf.connected(f, 0);
     }
 
     // returns the number of open sites
     public int numberOfOpenSites() {
-        int open = 0;
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (grid[i][j] == 1) {
-                    open++;
-                }
-            }
-        }
-        return open;
+        return count;
     }
 
     // does the system percolate? normalized
     public boolean percolates() {
-        return connected(id[0], id[size * size + 1]);
+        return wquf.connected(id[0], id[size * size + 1]);
     }
 
-    // normalized
-    public boolean connected(int p, int q) {
-        return id[p] == id[q];
-    }
-
-    public void union(int row, int col, int row2, int col2) {
+    private void union(int row, int col, int row2, int col2) {
         int pid = id[(row - 1) * size + col];
         int qid = id[(row2 - 1) * size + col2];
-        for (int i = 0; i < id.length; i++)
-            if (id[i] == pid) id[i] = qid;
+        // for (int i = 0; i < id.length; i++)
+        //     if (id[i] == pid) id[i] = qid;
+        wquf.union(pid, qid);
     }
 
-    public void unionBottom(int row, int col) {
+    private void unionBottom(int row, int col) {
         int pid = id[(row - 1) * size + col];
         int qid = id[0];
-        for (int i = 0; i < id.length; i++)
-            if (id[i] == pid) id[i] = qid;
+        // for (int i = 0; i < id.length; i++)
+        //     if (id[i] == pid) id[i] = qid;
+        wquf.union(pid, qid);
     }
 
-    public void unionTop(int row, int col) {
+    private void unionTop(int row, int col) {
         int pid = id[(row - 1) * size + col];
         int qid = id[size * size + 1];
-        for (int i = 0; i < id.length; i++)
-            if (id[i] == pid) id[i] = qid;
+        // for (int i = 0; i < id.length; i++)
+        //     if (id[i] == pid) id[i] = qid;
+        wquf.union(pid, qid);
     }
 
     public static void main(String[] args) {
+        // Percolation percolation = new Percolation(99);
     }
 }
